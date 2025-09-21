@@ -4,7 +4,7 @@ indicator("Daily Fibonacci Retracement v1.1", overlay=true, max_lines_count=500,
 /*
     ───────────────────────────────────────────────
     Daily Fibonacci Retracement Indicator
-    Author: [Your Name or Handle]
+    Author: [Nacho]
     ───────────────────────────────────────────────
 
     Version History:
