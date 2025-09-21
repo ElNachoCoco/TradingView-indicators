@@ -1,0 +1,82 @@
+//@version=5
+indicator("Daily Fibonacci Retracement v1.1", overlay=true, max_lines_count=500, max_labels_count=500)
+
+/*
+    ───────────────────────────────────────────────
+    Daily Fibonacci Retracement Indicator
+    Author: [Your Name or Handle]
+    ───────────────────────────────────────────────
+
+    Version History:
+    v1.0 (Initial Release)
+        - Detects new trading day
+        - Stores previous day’s High/Low
+        - Plots Fibonacci retracements from prevLow → prevHigh
+        - Clears old lines and labels each day
+
+    v1.1 (Current)
+        - Added toggle for retracement direction
+          • Low → High (uptrend mode)
+          • High → Low (downtrend mode)
+        - Cleaner code structure for future expansion
+    ───────────────────────────────────────────────
+*/
+
+// === Inputs
+directionUp = input.bool(true, "Draw Low → High (Uptrend)", inline="dir")
+_           = input.bool(false, "Draw High → Low (Downtrend)", inline="dir")
+
+// === Detect new day
+isNewDay = ta.change(time("D"))
+
+// === Store yesterday's OHLC values
+var float prevHigh  = na
+var float prevLow   = na
+var float prevClose = na
+
+if isNewDay
+    prevHigh  := high[1]
+    prevLow   := low[1]
+    prevClose := close[1]
+
+// === Define custom fib ratios
+fibLevels = array.from(0.0, 0.1, 0.2, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0)
+
+// === Persistent arrays for lines and labels
+var line[] fibLines   = array.new_line()
+var label[] fibLabels = array.new_label()
+
+// === Clear old lines/labels at start of new day
+if isNewDay and not na(prevHigh) and not na(prevLow)
+    for l in fibLines
+        line.delete(l)
+    array.clear(fibLines)
+
+    for lb in fibLabels
+        label.delete(lb)
+    array.clear(fibLabels)
+
+    // === Range and levels
+    fibRange = prevHigh - prevLow
+
+    for i = 0 to array.size(fibLevels) - 1
+        ratio = array.get(fibLevels, i)
+
+        level = directionUp
+            ? prevLow + fibRange * ratio      // low → high retracement
+            : prevHigh - fibRange * ratio     // high → low retracement
+
+        // Draw line across chart
+        l = line.new(bar_index, level, bar_index + 1, level,
+            extend=extend.right,
+            width=2,
+            color=color.new(color.blue, 60))
+        array.push(fibLines, l)
+
+        // Label at the left edge
+        lb = label.new(bar_index, level,
+            text="Fib " + str.tostring(ratio),
+            style=label.style_label_left,
+            textcolor=color.white,
+            color=color.new(color.blue, 70))
+        array.push(fibLabels, lb)
